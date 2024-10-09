@@ -8,9 +8,15 @@ const server = net.createServer((connection) => {
   
     connection.on('data', data => {
         const dataArr = data.toString().split(/[\r\n|\r|\n]+/)
-        console.log(dataArr)
-        if (dataArr.includes('PING')) {
+
+        if (dataArr.find(el => el.toUpperCase() === 'PING')) {
             connection.write('+PONG\r\n')
+        }
+        if (dataArr.find(el => el.toUpperCase() === 'ECHO')) {
+            const idx = dataArr.findIndex(el => el.toUpperCase() === 'ECHO') 
+            const str = `${dataArr[idx + 1]}\r\n${dataArr[idx + 2]}\r\n`
+
+            connection.write(str)
         }
     })
 });
