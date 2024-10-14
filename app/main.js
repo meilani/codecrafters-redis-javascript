@@ -7,7 +7,9 @@ console.log("Logs from your program will appear here!");
 const server = net.createServer((connection) => {
     const setObj = {}
     connection.on('data', data => {
-        const dataArr = data.toString().split(/[\r\n|\r|\n]+/)
+
+        const dataArr = data.toString().split(/[\r\n|\r|\n]+/);
+        const currentTime = Date.now();
         
         if (dataArr.find(el => el.toUpperCase() === 'PING')) {
             connection.write('+PONG\r\n')
@@ -20,16 +22,26 @@ const server = net.createServer((connection) => {
         }
         if (dataArr.find(el => el.toUpperCase() === 'SET')) {
             const idx = dataArr.findIndex(el => el.toUpperCase() === 'SET') 
-            setObj[dataArr[idx + 2]] = dataArr[idx + 4]
+            const key = dataArr[idx + 2];
+            setObj[key] = {}
+            setObj[key]['value'] = dataArr[idx + 4]
+            setObj[key]['px'] = dataArr[idx + 8] || null;
+            setObj[key]['currentTime'] = currentTime;
             const str = '+OK\r\n'
 
             connection.write(str)
         }
         if (dataArr.find(el => el.toUpperCase() === 'GET')) {
             const idx = dataArr.findIndex(el => el.toUpperCase() === 'GET')
-            let str = '$-1\r\n'
-            if (Object.hasOwn(setObj, dataArr[idx + 2])) {
-                let val = setObj[dataArr[idx + 2]]
+            const key = dataArr[idx + 2];
+            let str = '$-1\r\n';
+            const timeDiff = currentTime - setObj[key]['currentTime'];
+            
+            if (setObj[key]['px'] && (timeDiff > setObj[key]['px'] )) {
+                delete setObj[key]
+            }
+            if (Object.hasOwn(setObj, key)) {
+                let val = setObj[key]['value']
                 str = `$${val.length}\r\n${val}\r\n`
             } 
 
